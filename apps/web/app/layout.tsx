@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import ApiBanner from "@/components/ApiBanner";
 import Nav from "@/components/Nav";
 import Providers from "./providers";
 
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>
+          <ApiBanner />
           <div className="app">
             <Nav />
             <main className="main">{children}</main>

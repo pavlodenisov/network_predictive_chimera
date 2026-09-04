@@ -1,0 +1,77 @@
+[project]
+name = "chimera-network-intelligence"
+version = "0.1.0"
+description = "Internal analytical intelligence platform for a venture capital firm — founders, LPs, talent, connectors."
+requires-python = ">=3.11"
+readme = "README.md"
+license = { text = "Proprietary" }
+
+# Runtime deps are pinned in requirements.txt for reproducible local installs.
+# This section exists so `pip install -e .` makes `intelligence` importable
+# (needed by `python -m intelligence.jobs.weekly` and `python -m intelligence.backtest`).
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "sqlalchemy>=2.0.30",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.2",
+  "alembic>=1.13",
+  "PyYAML>=6.0",
+  "python-dateutil>=2.9",
+  "httpx>=0.27",
+  "feedparser>=6.0",
+  "structlog>=24.1",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2"]
+dev = ["pytest>=8.2", "pytest-cov>=5.0", "ruff>=0.5", "mypy>=1.10"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["intelligence"]
+
+[tool.setuptools.package-data]
+intelligence = ["py.typed"]
+
+# ----------------------------------------------------------------------------
+# Quality gates (invoked by .claude hooks and `make lint`)
+# ----------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["intelligence", "tests", "evals"]
+# Alembic migration bodies are generated; format them but don't lint import order etc.
+extend-exclude = ["db/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "PIE", "RET", "PTH"]
+ignore = ["E501"]  # line length handled by formatter; long config strings tolerated
+
+[tool.ruff.lint.isort]
+known-first-party = ["intelligence", "tests", "evals"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["intelligence"]
+plugins = ["pydantic.mypy"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+# SQLAlchemy 2.0 typed models + dynamic config loading make full strictness noisy for V0.
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers --import-mode=importlib"
+markers = [
+  "acceptance: end-to-end acceptance scenarios from the spec (§62-65)",
+  "integration: cross-layer pipeline tests",
+  "slow: excluded from the fast unit loop",
+]
+filterwarnings = ["ignore::DeprecationWarning"]

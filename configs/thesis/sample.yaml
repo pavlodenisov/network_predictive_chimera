@@ -1,0 +1,66 @@
+# SAMPLE thesis configuration (spec §60). Clearly labelled sample — NOT hard-coded into
+# application logic. Edit / version this per the real Chimera thesis. Loaded into the
+# `thesis_configuration` table on seed with is_sample=true.
+
+name: chimera-sample
+version: v0.1
+is_sample: true
+
+sectors:
+  - artificial intelligence
+  - AI infrastructure
+  - developer tools
+  - robotics
+  - industrial technology
+  - fintech
+  - enterprise software
+
+technologies:
+  - large language models
+  - inference optimization
+  - distributed systems
+  - GPU computing
+  - training infrastructure
+  - model serving
+  - vector databases
+  - autonomy / perception
+  - simulation
+
+technical_topics:
+  - inference
+  - distributed systems
+  - GPU
+  - training infrastructure
+  - model serving
+  - compilers
+  - scheduling
+  - retrieval
+  - robotics control
+  - sensor fusion
+
+business_models:
+  - usage-based infrastructure
+  - open-core
+  - enterprise SaaS
+  - API platform
+
+stages:
+  - pre-seed
+  - seed
+  - series A
+
+geographies:
+  - United States
+  - Canada
+  - United Kingdom
+  - European Union
+
+# Embedding config for thesis_embedding_similarity (fit dimension). V0 ships no embedding
+# provider; similarity is `unknown` until one is configured (never silently 0).
+embedding_model: null            # e.g. "text-embedding-3-large" once authorized
+embedding_model_version: null
+
+notes: >
+  Replace with the firm's actual thesis. The scoring engine reads sectors/technologies/
+  technical_topics/business_models/stages/geographies for deterministic keyword-overlap
+  fit features; embedding similarity activates only when embedding_model is set.

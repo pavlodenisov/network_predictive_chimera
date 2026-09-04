@@ -1,0 +1,22 @@
+name: Potential LPs — Allocator Movement
+active: true
+target_class: POTENTIAL_LP
+
+industries: [family office, endowment, foundation, fund of funds, wealth management, institutional investing]
+technical_topics: []
+titles: [chief investment officer, cio, partner, head of alternatives, head of venture, investment director, portfolio manager, investment committee]
+prior_employers: []
+geographies: [United States, Canada, United Kingdom, European Union, Middle East, Singapore]
+
+keywords: [venture allocation, emerging managers, alternatives, private markets, "new mandate", "joined as CIO", "joined as Partner", allocation]
+excluded_keywords: [financial advisor to individuals, retail]
+
+source_ids: [synthetic, json_snapshot, rss_news, crm]
+lookback_days: 180
+
+minimum_evidence:
+  min_signals: 1
+  require_any_event_types: [CIO_ROLE_STARTED, PARTNER_ROLE_STARTED, INVESTMENT_MANDATE_CHANGED, LP_ROLE_STARTED, FAMILY_OFFICE_ROLE_STARTED, VENTURE_ALLOCATION_SIGNAL, EMERGING_MANAGER_SIGNAL]
+  require_domain_background: false
+
+created_by: seed

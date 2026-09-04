@@ -1,0 +1,43 @@
+[
+  {
+    "case_id": "alex-lee-ambiguous",
+    "description": "Two distinct 'Alex Lee' (Stripe vs Google); a bare name mention must resolve AMBIGUOUS.",
+    "existing_people": [
+      {"name": "Alex Lee", "linkedin_url": "linkedin.com/in/alex-lee-stripe", "employers": ["Stripe"]},
+      {"name": "Alex Lee", "linkedin_url": "linkedin.com/in/alex-lee-google", "employers": ["Google"]}
+    ],
+    "candidate": {"name": "Alex Lee"},
+    "expected_decision": "AMBIGUOUS",
+    "expected_match_index": null
+  },
+  {
+    "case_id": "linkedin-plus-employer-match",
+    "description": "LinkedIn URL + employer overlap -> confident MATCH.",
+    "existing_people": [
+      {"name": "Dana Reyes", "linkedin_url": "linkedin.com/in/dana-reyes", "employers": ["Anthropic"]}
+    ],
+    "candidate": {"name": "Dana Reyes", "linkedin_url": "linkedin.com/in/dana-reyes/", "current_employer": "Anthropic"},
+    "expected_decision": "MATCH",
+    "expected_match_index": 0
+  },
+  {
+    "case_id": "name-only-no-merge",
+    "description": "A single exact-name hit with nothing else stays below the possible threshold.",
+    "existing_people": [
+      {"name": "Jordan Diaz", "linkedin_url": "linkedin.com/in/jordan-diaz-x", "employers": ["Cirrus Compute"]}
+    ],
+    "candidate": {"name": "Jordan Diaz"},
+    "expected_decision": "POSSIBLE_MATCH",
+    "expected_match_index": 0
+  },
+  {
+    "case_id": "genuinely-new",
+    "description": "No existing person -> NO_MATCH (a new entity).",
+    "existing_people": [
+      {"name": "Someone Else", "linkedin_url": "linkedin.com/in/someone-else", "employers": ["Helix Labs"]}
+    ],
+    "candidate": {"name": "Brand New Person"},
+    "expected_decision": "NO_MATCH",
+    "expected_match_index": null
+  }
+]

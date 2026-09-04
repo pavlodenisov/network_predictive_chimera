@@ -1,0 +1,41 @@
+# Access model — V0.1.  Shared graph layer used by founder/lp/talent (spec §14).
+# BFS <= max_hops over relationship_edge from person.is_chimera_seed nodes to the target.
+# All values configurable; these are V0 rules. See docs/SCORING.md §5.
+
+name: access
+version: v0.1
+scale: 100
+max_hops: 3
+
+# Base score by the strongest path found. `strength` = weakest edge label on the path.
+path_base:
+  DIRECT:            100    # target is a Chimera person / entity
+  HOP1_STRONG:        90
+  HOP1_MODERATE:      75
+  HOP1_WEAK:          55
+  HOP2_STRONG:        45
+  HOP2_MODERATE:      30
+  HOP2_WEAK:          18
+  HOP3_ANY:           15
+  NO_PATH:             0
+  # If every candidate path contains an edge with strength UNKNOWN and there is no better
+  # path, the access score is reported as `unknown` (NOT 0) — see engine.
+
+adjustments:
+  independent_paths:
+    # +bonus for multiple paths with distinct first hops
+    per_extra_path: 4
+    max_bonus: 8
+  staleness:
+    # decay the base when the chosen path has a stale edge (last_verified_at older than threshold_days)
+    threshold_days: 365
+    per_month_penalty: 4
+    max_penalty: 15
+  confidence_clamp:
+    # multiply the (adjusted) base by mean(edge.confidence) over the chosen path when confidences are present
+    enabled: true
+    floor: 0.5
+
+output:
+  # stored into score_snapshot.contribution_breakdown.access
+  fields: [hops, strength, node_names, edge_evidence_ids, last_verified_at, independent_path_count, base, adjusted]

@@ -1,0 +1,22 @@
+name: Portfolio Technical Talent — Recent Departures
+active: true
+target_class: TALENT
+
+industries: [enterprise software, AI infrastructure, fintech, developer tools, robotics]
+technical_topics: [distributed systems, platform engineering, ML infrastructure, security, data infrastructure]
+titles: [vp engineering, head of engineering, director of engineering, staff engineer, principal engineer, head of product, cto, head of ai]
+prior_employers: [Stripe, Databricks, Anthropic, OpenAI, Ramp, Figma, Scale AI, Snowflake, Airbnb, Notion]
+geographies: [United States, Canada, United Kingdom, European Union]
+
+keywords: [departed, "left", "next chapter", "open to", "exploring", "wrapping up"]
+excluded_keywords: [recruiter, "we are hiring"]
+
+source_ids: [synthetic, json_snapshot, rss_news, crm]
+lookback_days: 90
+
+minimum_evidence:
+  min_signals: 1
+  require_any_event_types: [EMPLOYMENT_ENDED, PROFESSIONAL_DEPARTURE, OPEN_TO_WORK_SIGNAL, COMPANY_ACQUIRED]
+  require_role_match: true            # must match >= 1 open portfolio_role_need above 0.55
+
+created_by: seed

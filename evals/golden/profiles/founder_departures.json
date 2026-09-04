@@ -1,0 +1,78 @@
+[
+  {
+    "case_id": "sarah-chen-departure",
+    "subject": "Sarah Chen",
+    "previous_snapshot": {
+      "headline": "Staff ML Engineer at Synthetic AI Labs — inference infrastructure",
+      "current_company": "Synthetic AI Labs",
+      "current_title": "Staff ML Engineer",
+      "current_seniority": "senior_ic"
+    },
+    "snapshot": {
+      "headline": "Building",
+      "current_company": null,
+      "current_title": null
+    },
+    "occurred_on": "2026-08-31",
+    "expected_events": ["EMPLOYMENT_ENDED", "HEADLINE_CHANGED"],
+    "expected_inferences": ["POSSIBLE_COMPANY_FORMATION"],
+    "expected_facts": ["EMPLOYMENT_ENDED_AT", "HEADLINE_CHANGED", "HEADLINE_TEXT"]
+  },
+  {
+    "case_id": "priya-nair-departure",
+    "subject": "Priya Nair",
+    "previous_snapshot": {
+      "headline": "VP Engineering at Meridian Payments",
+      "current_company": "Meridian Payments",
+      "current_title": "VP Engineering",
+      "current_seniority": "vp"
+    },
+    "snapshot": {
+      "headline": "VP Engineering — payments, distributed systems. Considering what's next.",
+      "current_company": null,
+      "current_title": null
+    },
+    "occurred_on": "2026-08-30",
+    "expected_events": ["EMPLOYMENT_ENDED", "HEADLINE_CHANGED"],
+    "expected_inferences": [],
+    "expected_facts": ["EMPLOYMENT_ENDED_AT", "HEADLINE_CHANGED"]
+  },
+  {
+    "case_id": "no-change",
+    "subject": "Stable Person",
+    "previous_snapshot": {
+      "headline": "Principal Engineer at Vector Systems",
+      "current_company": "Vector Systems",
+      "current_title": "Principal Engineer"
+    },
+    "snapshot": {
+      "headline": "Principal Engineer at Vector Systems",
+      "current_company": "Vector Systems",
+      "current_title": "Principal Engineer"
+    },
+    "occurred_on": "2026-08-30",
+    "expected_events": [],
+    "expected_inferences": [],
+    "expected_facts": []
+  },
+  {
+    "case_id": "promotion",
+    "subject": "Dana Ruiz",
+    "previous_snapshot": {
+      "headline": "Senior Engineer at Helix Labs",
+      "current_company": "Helix Labs",
+      "current_title": "Senior Engineer",
+      "current_seniority": "senior_ic"
+    },
+    "snapshot": {
+      "headline": "Director of Engineering at Helix Labs",
+      "current_company": "Helix Labs",
+      "current_title": "Director of Engineering",
+      "current_seniority": "director"
+    },
+    "occurred_on": "2026-08-20",
+    "expected_events": ["TITLE_CHANGED", "PROMOTION", "HEADLINE_CHANGED"],
+    "expected_inferences": [],
+    "expected_facts": ["HEADLINE_CHANGED"]
+  }
+]

@@ -1,0 +1,123 @@
+# Talent scoring model — V0.1.  Scores `person x portfolio_role_need`, not "how talented is X" (spec §16).
+# One score per open role, stored in candidate_role_match. See docs/SCORING.md §4.
+
+name: talent
+version: v0.1
+target: talent
+scale: 100
+
+# "priority" here == the person-role match score. Dimension weights sum to 1.0.
+priority:
+  functional:            0.18
+  seniority:             0.12
+  domain:                0.18
+  stage_experience:      0.12
+  operating_experience:  0.10
+  execution_evidence:    0.12
+  location:              0.06
+  availability_timing:   0.06
+  access:                0.06
+
+dimensions:
+
+  functional:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      function_alignment:
+        weight: 1.0
+        normalization: tiered
+        params: {tiers: {exact: 1.0, adjacent: 0.6, none: 0.1}}
+        missing_behavior: unknown
+        direction: positive
+        source: "role_need.function vs person employment.function history"
+
+  seniority:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      seniority_distance:
+        weight: 1.0
+        normalization: bucket
+        params: {thresholds: [0, 1, 2], values: [1.0, 0.7, 0.4, 0.1]}   # |ladder steps| between role and person
+        missing_behavior: unknown
+        direction: positive
+        source: "abs(ladder(role_need.seniority) - ladder(person max seniority))"
+
+  domain:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      domain_overlap:
+        weight: 1.0
+        normalization: passthrough_unit
+        missing_behavior: unknown
+        direction: positive
+        source: "jaccard(role_need.domain_requirements, person domain facts/topics)"
+
+  stage_experience:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      stage_overlap:
+        weight: 1.0
+        normalization: tiered
+        params: {tiers: {match: 1.0, adjacent: 0.6, none: 0.15}}
+        missing_behavior: unknown
+        direction: positive
+        source: "person employer stages vs role_need.stage_requirements"
+
+  operating_experience:
+    kind: weighted_features
+    renormalize_over_present: true
+    features:
+      years_operating:
+        weight: 1.0
+        normalization: min_ratio
+        params: {target: 8}
+        missing_behavior: unknown
+        direction: positive
+        source: "sum of tenure in non-founder operating roles"
+
+  execution_evidence:
+    kind: weighted_features
+    renormalize_over_present: true
+    features:
+      product_shipped:      {weight: 0.30, normalization: binary, missing_behavior: zero, direction: positive, source: "fact:PRODUCT_SHIPPED"}
+      org_built_team_size:  {weight: 0.30, normalization: linear_cap, params: {divisor: 50}, missing_behavior: unknown, direction: positive, source: "fact:TEAM_SIZE_MANAGED"}
+      promotions:           {weight: 0.20, normalization: capped_count, params: {max: 4}, missing_behavior: zero, direction: positive, source: "fact:PROMOTION_COUNT"}
+      budget_ownership:     {weight: 0.20, normalization: binary, missing_behavior: zero, direction: positive, source: "fact:BUDGET_OWNERSHIP"}
+
+  location:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      location_alignment:
+        weight: 1.0
+        normalization: tiered
+        params: {tiers: {same_metro: 1.0, remote_ok: 0.8, same_country: 0.6, mismatch: 0.1}}
+        missing_behavior: unknown
+        direction: positive
+        source: "role_need.location_requirements vs person.primary_location"
+
+  availability_timing:
+    kind: decay_signals
+    # availability is a LABELLED INFERENCE unless fact:OPEN_TO_WORK_DECLARED exists (spec §64).
+    signals:
+      OPEN_TO_WORK_SIGNAL:     {initial: 1.00, half_life_days: 120}
+      PROFESSIONAL_DEPARTURE:  {initial: 0.75, half_life_days: 90}
+      NEW_EXECUTIVE_ROLE:      {initial: -0.80, half_life_days: 180}   # just took a role -> less available
+      COMPANY_ACQUIRED:        {initial: 0.50, half_life_days: 120}
+
+  access:
+    kind: access_model
+    model: access_v0.1
+
+confidence:
+  weights:
+    reliability:   0.20
+    independence:  0.16
+    recency:       0.20
+    extraction:    0.14
+    identity:      0.14
+    completeness:  0.16

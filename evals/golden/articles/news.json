@@ -1,0 +1,34 @@
+[
+  {
+    "case_id": "infra-stealth",
+    "subject": "Sarah Chen",
+    "text": "Former Synthetic AI Labs engineer Sarah Chen has left the company and is building a new inference infrastructure project. The project is currently in stealth.",
+    "expected_events": ["NEWS_MENTION", "EMPLOYMENT_ENDED", "STEALTH_COMPANY_SIGNAL"],
+    "expected_inferences": ["POSSIBLE_COMPANY_FORMATION", "STEALTH_COMPANY_SIGNAL"],
+    "expected_entities": ["Synthetic AI Labs"]
+  },
+  {
+    "case_id": "lp-mandate",
+    "subject": "Marcus Webb",
+    "text": "Integral Family Office names Marcus Webb Partner with a new venture allocation mandate. His official bio now adds responsibility for the office's venture fund allocation and emerging manager program.",
+    "expected_events": ["NEWS_MENTION", "PARTNER_ROLE_STARTED", "INVESTMENT_MANDATE_CHANGED"],
+    "expected_inferences": [],
+    "expected_entities": []
+  },
+  {
+    "case_id": "fundraise",
+    "subject": "Ada Lin",
+    "text": "Foundry Robotics, founded by Ada Lin, has raised a $28M Series A led by an unnamed fund to scale its manipulation hardware.",
+    "expected_events": ["NEWS_MENTION", "FUNDRAISE_ANNOUNCED"],
+    "expected_inferences": [],
+    "expected_entities": []
+  },
+  {
+    "case_id": "acquisition",
+    "subject": "Ben Ortiz",
+    "text": "Cobalt Analytics, where Ben Ortiz was head of product, has been acquired by a larger data platform.",
+    "expected_events": ["NEWS_MENTION", "COMPANY_ACQUIRED"],
+    "expected_inferences": [],
+    "expected_entities": []
+  }
+]

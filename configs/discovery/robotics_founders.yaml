@@ -1,0 +1,22 @@
+name: Robotics Founders
+active: true
+target_class: POTENTIAL_FOUNDER
+
+industries: [robotics, industrial technology, manufacturing automation, autonomy]
+technical_topics: [robotics control, perception, sensor fusion, simulation, motion planning, SLAM]
+titles: [robotics engineer, autonomy engineer, perception engineer, controls engineer, research scientist, principal engineer, manufacturing automation lead]
+prior_employers: []
+geographies: [United States, Canada, United Kingdom, European Union]
+
+keywords: [robotics, autonomy, manipulation, perception, "new company", stealth, spinout]
+excluded_keywords: [recruiter, "we are hiring"]
+
+source_ids: [synthetic, json_snapshot, rss_news]
+lookback_days: 150
+
+minimum_evidence:
+  min_signals: 1
+  require_any_event_types: [EMPLOYMENT_ENDED, FOUNDER_TITLE_ADDED, RESEARCH_COMMERCIALIZATION_SIGNAL, COMPANY_FORMATION_CONFIRMED]
+  require_domain_background: true
+
+created_by: seed

@@ -1,0 +1,44 @@
+# Action rules — V0.1 (spec §57). Ordered; first match wins. Deterministic — no LLM.
+# Loaded into `action_rule_set`. Conditions operate on a scored person's public fields:
+#   priority, confidence, access, quality, fit, timing, model_target,
+#   has_role_match (talent), has_warm_path, is_newly_discovered, data_stale.
+
+version: actions_v0.1
+status: active
+
+rules:
+  - when: {data_stale: true, priority_gte: 60}
+    then: VERIFY_DATA
+    reason_codes: [DATA_STALE]
+
+  - when: {priority_gte: 70, confidence_lt: 0.60}
+    then: VERIFY_DATA
+    reason_codes: [LOW_CONFIDENCE]
+
+  - when: {model_target: talent, has_role_match: true, priority_gte: 70}
+    then: MATCH_TO_PORTFOLIO_ROLE
+    reason_codes: [PORTFOLIO_ROLE_MATCH]
+
+  - when: {priority_gte: 85, confidence_gte: 0.80, access_gte: 70}
+    then: REQUEST_INTRO
+    reason_codes: [HIGH_PRIORITY, WARM_PATH_AVAILABLE]
+
+  - when: {priority_gte: 85, confidence_gte: 0.80, access_lt: 70}
+    then: CONTACT_NOW
+    reason_codes: [HIGH_PRIORITY, NO_WARM_PATH]
+
+  - when: {model_target: lp, priority_gte: 40, confidence_gte: 0.60}
+    then: LP_RELATIONSHIP_BUILDING
+    reason_codes: [LP_CANDIDATE]
+
+  - when: {priority_gte: 50, confidence_gte: 0.60}
+    then: CONSIDER_CONTACT
+    reason_codes: [MODERATE_PRIORITY]
+
+  - when: {priority_gte: 35}
+    then: MONITOR
+    reason_codes: [BELOW_CONTACT_THRESHOLD]
+
+  - when: {always: true}
+    then: PASS
+    reason_codes: [LOW_PRIORITY]

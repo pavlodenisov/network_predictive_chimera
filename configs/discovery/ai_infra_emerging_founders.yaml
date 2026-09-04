@@ -1,0 +1,23 @@
+# Discovery rule (spec §25). Loaded into `discovery_rule` on seed.
+name: AI Infrastructure Emerging Founders
+active: true
+target_class: POTENTIAL_FOUNDER
+
+industries: [artificial intelligence, AI infrastructure, cloud infrastructure, developer tools]
+technical_topics: [inference, distributed systems, GPU, training infrastructure, model serving, scheduling, compilers]
+titles: [staff engineer, principal engineer, senior staff engineer, research engineer, member of technical staff, engineering lead, architect]
+prior_employers: []          # any; execution evidence matters more than logo
+geographies: [United States, Canada, United Kingdom, European Union]
+
+keywords: [inference, distributed systems, GPU, training infrastructure, model serving, "building", stealth, "left to start"]
+excluded_keywords: [hiring manager, recruiter, "we are hiring", bootcamp]
+
+source_ids: [synthetic, json_snapshot, rss_news]
+lookback_days: 120
+
+minimum_evidence:
+  min_signals: 1
+  require_any_event_types: [EMPLOYMENT_ENDED, FOUNDER_TITLE_ADDED, STEALTH_COMPANY_SIGNAL, COMPANY_FORMATION_CONFIRMED]
+  require_domain_background: true      # >= 2y in one of technical_topics
+
+created_by: seed

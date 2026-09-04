@@ -1,0 +1,90 @@
+# LP scoring model — V0.1.  Distinct from founder; does NOT reuse founder quality (spec §15).
+# See docs/SCORING.md §3.
+
+name: lp
+version: v0.1
+target: lp
+scale: 100
+
+priority:
+  authority:              0.20
+  capital_relevance:      0.15
+  venture_allocation_fit: 0.20
+  emerging_manager_fit:   0.10
+  chimera_fit:            0.15
+  timing:                 0.10
+  access:                 0.10
+
+dimensions:
+
+  authority:
+    kind: weighted_features
+    renormalize_over_present: false     # binary role signals; absence is meaningful (not authoritative)
+    features:
+      is_cio:                  {weight: 0.24, normalization: binary, missing_behavior: zero, direction: positive, source: "fact:DECISION_AUTHORITY_ROLE=cio"}
+      is_partner:              {weight: 0.20, normalization: binary, missing_behavior: zero, direction: positive, source: "fact:DECISION_AUTHORITY_ROLE=partner"}
+      is_head_of_venture:      {weight: 0.16, normalization: binary, missing_behavior: zero, direction: positive, source: "fact:DECISION_AUTHORITY_ROLE=head_of_venture"}
+      is_head_of_alternatives: {weight: 0.14, normalization: binary, missing_behavior: zero, direction: positive, source: "fact:DECISION_AUTHORITY_ROLE=head_of_alternatives"}
+      is_ic_member:            {weight: 0.12, normalization: binary, missing_behavior: zero, direction: positive, source: "event:INVESTMENT_COMMITTEE_ROLE"}
+      is_family_office_lead:   {weight: 0.08, normalization: binary, missing_behavior: zero, direction: positive, source: "fact:DECISION_AUTHORITY_ROLE=family_office_lead"}
+      principal_with_mandate:  {weight: 0.06, normalization: binary, missing_behavior: zero, direction: positive, source: "fact:INVESTMENT_MANDATE + seniority=principal"}
+
+  capital_relevance:
+    kind: weighted_features
+    renormalize_over_present: true
+    features:
+      org_is_allocator_type:   {weight: 0.45, normalization: binary,    missing_behavior: zero,    direction: positive, source: "organization.organization_type in {family_office, endowment, foundation, fund_of_funds}"}
+      disclosed_aum:           {weight: 0.35, normalization: min_ratio, params: {target: 5000000000}, missing_behavior: unknown, direction: positive, source: "organization.aum_usd (DISCLOSED figures only — never estimated)"}
+      known_fund_investment_activity: {weight: 0.20, normalization: binary, missing_behavior: zero, direction: positive, source: "event:FUND_INVESTMENT_ACTIVITY"}
+    notes: "Never speculate about private personal wealth (spec §15)."
+
+  venture_allocation_fit:
+    kind: weighted_features
+    renormalize_over_present: true
+    features:
+      allocates_to_vc:              {weight: 0.30, normalization: binary, missing_behavior: unknown, direction: positive, source: "fact:VENTURE_ALLOCATION_EVIDENCE"}
+      allocates_to_emerging_managers: {weight: 0.25, normalization: binary, missing_behavior: unknown, direction: positive, source: "event:EMERGING_MANAGER_SIGNAL"}
+      allocates_early_stage:        {weight: 0.20, normalization: binary, missing_behavior: unknown, direction: positive, source: "fact:VENTURE_ALLOCATION_EVIDENCE.stage=early"}
+      geo_match:                    {weight: 0.15, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs Chimera geography"}
+      strategy_match:               {weight: 0.10, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs Chimera strategy"}
+
+  emerging_manager_fit:
+    kind: weighted_features
+    renormalize_over_present: true
+    features:
+      emerging_manager_program_evidence: {weight: 0.60, normalization: binary, missing_behavior: zero, direction: positive, source: "event:EMERGING_MANAGER_SIGNAL / fact:EMERGING_MANAGER_EVIDENCE"}
+      prior_emerging_commitments:        {weight: 0.40, normalization: capped_count, params: {max: 5}, missing_behavior: zero, direction: positive, source: "count of disclosed emerging-manager commitments"}
+
+  chimera_fit:
+    kind: weighted_features
+    renormalize_over_present: true
+    features:
+      stage_fit:  {weight: 0.30, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "org profile vs Chimera fund stage"}
+      size_fit:   {weight: 0.25, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "check size vs Chimera fund size"}
+      sector_fit: {weight: 0.25, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "org sector prefs vs Chimera thesis"}
+      geo_fit:    {weight: 0.20, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "org geo vs Chimera geo"}
+
+  timing:
+    kind: decay_signals
+    signals:
+      CIO_ROLE_STARTED:            {initial: 1.00, half_life_days: 90}
+      PARTNER_ROLE_STARTED:        {initial: 1.00, half_life_days: 90}
+      INVESTMENT_MANDATE_CHANGED:  {initial: 1.00, half_life_days: 75}
+      LP_ROLE_STARTED:             {initial: 0.85, half_life_days: 90}
+      FAMILY_OFFICE_ROLE_STARTED:  {initial: 0.85, half_life_days: 90}
+      VENTURE_ALLOCATION_SIGNAL:   {initial: 0.80, half_life_days: 120}
+      EMERGING_MANAGER_SIGNAL:     {initial: 0.80, half_life_days: 120}
+      INVESTMENT_COMMITTEE_ROLE:   {initial: 0.75, half_life_days: 100}
+
+  access:
+    kind: access_model
+    model: access_v0.1
+
+confidence:
+  weights:
+    reliability:   0.24
+    independence:  0.18
+    recency:       0.16
+    extraction:    0.14
+    identity:      0.12
+    completeness:  0.16

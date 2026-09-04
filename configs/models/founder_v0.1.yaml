@@ -1,0 +1,184 @@
+# Founder scoring model — V0.1
+# Weights are V0 and NOT truth (spec §10). Changing any weight/constant requires a new
+# `version:` (CLAUDE.md rule 5). See docs/SCORING.md §2 for the full methodology.
+
+name: founder
+version: v0.1
+target: founder
+scale: 100
+
+# Dimension weights — MUST sum to 1.0 (loader asserts ±1e-6).
+priority:
+  quality: 0.35   # demonstrated ability & execution evidence
+  fit:     0.25   # alignment with Chimera's investment interests
+  timing:  0.25   # is there a reason to engage now
+  access:  0.15   # how realistically Chimera can reach the person
+
+dimensions:
+
+  quality:
+    kind: weighted_features
+    renormalize_over_present: true          # `unknown` features drop out; weights renormalize
+    features:
+      prior_exit:
+        weight: 0.15
+        normalization: binary
+        missing_behavior: zero
+        direction: positive
+        source: "fact:PRIOR_EXIT"
+        rationale: "A prior exit is the strongest single execution signal available pre-diligence."
+      prior_founder:
+        weight: 0.10
+        normalization: capped_count
+        params: {max: 3}
+        missing_behavior: zero
+        direction: positive
+        source: "fact:COMPANIES_FOUNDED_COUNT"
+        rationale: "Repeat founders have navigated company formation before; capped to avoid rewarding serial non-outcomes."
+      institutional_fundraise:
+        weight: 0.09
+        normalization: binary
+        missing_behavior: zero
+        direction: positive
+        source: "fact:INSTITUTIONAL_FUNDRAISE"
+        rationale: "Having raised institutional capital is third-party validation of a fundable plan and team."
+      product_shipped:
+        weight: 0.08
+        normalization: binary
+        missing_behavior: zero
+        direction: positive
+        source: "fact:PRODUCT_SHIPPED / event:PRODUCT_LAUNCH"
+        rationale: "Evidence the person converts intent into a shipped artifact."
+      org_built_team_size:
+        weight: 0.06
+        normalization: linear_cap
+        params: {divisor: 50}
+        missing_behavior: unknown
+        direction: positive
+        source: "fact:TEAM_SIZE_MANAGED"
+        rationale: "Built and led an organization of non-trivial size (verified headcount only)."
+      verified_scale_milestone:
+        weight: 0.06
+        normalization: binary
+        missing_behavior: zero
+        direction: positive
+        source: "event:MAJOR_COMPANY_MILESTONE (tier1/2 only)"
+        rationale: "A verified users/revenue milestone; never an estimate."
+      years_domain_experience:
+        weight: 0.09
+        normalization: min_ratio
+        params: {target: 8}
+        missing_behavior: unknown
+        direction: positive
+        source: "fact:YEARS_DOMAIN_EXPERIENCE"
+        rationale: "Depth in the problem domain; saturates at ~8 years."
+      years_engineering_experience:
+        weight: 0.07
+        normalization: min_ratio
+        params: {target: 10}
+        missing_behavior: unknown
+        direction: positive
+        source: "fact:YEARS_ENGINEERING_EXPERIENCE"
+        rationale: "Technical builder depth for technical companies; saturates at ~10 years."
+      research_depth:
+        weight: 0.04
+        normalization: capped_count
+        params: {max: 10}
+        missing_behavior: zero
+        direction: positive
+        source: "fact:PUBLICATION_COUNT"
+        rationale: "Peer-reviewed output as a proxy for research capability."
+      patents:
+        weight: 0.04
+        normalization: capped_count
+        params: {max: 10}
+        missing_behavior: zero
+        direction: positive
+        source: "fact:PATENT_COUNT"
+        rationale: "Granted/filed patents as inventor; weak but objective."
+      oss_major:
+        weight: 0.04
+        normalization: binary
+        missing_behavior: zero
+        direction: positive
+        source: "fact:OSS_PROJECT_MAJOR / event:OPEN_SOURCE_PROJECT_LAUNCHED"
+        rationale: "Ownership of a widely-used open-source project."
+      early_employee_rank:
+        weight: 0.05
+        normalization: bucket
+        params: {thresholds: [10, 50, 200], values: [1.0, 0.7, 0.4, 0.1]}
+        missing_behavior: unknown
+        direction: positive
+        source: "fact:EARLY_EMPLOYEE_RANK"
+        rationale: "Joined a company that later succeeded, at a stage where impact was formative."
+      promotions:
+        weight: 0.04
+        normalization: capped_count
+        params: {max: 4}
+        missing_behavior: zero
+        direction: positive
+        source: "fact:PROMOTION_COUNT / event:PROMOTION"
+        rationale: "Repeated internal recognition of increasing scope."
+      time_to_leadership_years:
+        weight: 0.03
+        normalization: min_ratio
+        params: {target: 6, invert: true}
+        missing_behavior: unknown
+        direction: positive
+        source: "derived: first leadership title date - career start date"
+        rationale: "Faster ascent to real responsibility (lower is better; inverted)."
+      budget_ownership:
+        weight: 0.03
+        normalization: binary
+        missing_behavior: zero
+        direction: positive
+        source: "fact:BUDGET_OWNERSHIP"
+        rationale: "Owned a P&L / budget (verified statements only)."
+      prestige_weak_signal:
+        weight: 0.03            # <= 0.04 hard cap (docs/SCORING.md §2.1)
+        normalization: binary
+        missing_behavior: zero
+        direction: positive
+        source: "derived: top-tier employer/school flag"
+        rationale: "Explicitly a WEAK signal. Execution evidence dominates; this cannot swing the dimension."
+
+  fit:
+    kind: weighted_features
+    renormalize_over_present: true
+    features:
+      sector_match:                {weight: 0.18, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs thesis_configuration.sectors"}
+      technology_match:            {weight: 0.16, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs thesis_configuration.technologies"}
+      technical_topic_match:       {weight: 0.16, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs thesis_configuration.technical_topics"}
+      business_model_match:        {weight: 0.12, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs thesis_configuration.business_models"}
+      stage_match:                 {weight: 0.10, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs thesis_configuration.stages"}
+      geography_match:             {weight: 0.10, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs thesis_configuration.geographies"}
+      portfolio_adjacency:         {weight: 0.08, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "derived vs portfolio company sectors"}
+      thesis_embedding_similarity: {weight: 0.10, normalization: passthrough_unit, missing_behavior: unknown, direction: positive, source: "embedding cosine (model+version recorded); unknown if no embedding"}
+
+  timing:
+    kind: decay_signals
+    # value(t) = initial * exp(-ln2/half_life_days * days_since_event); dimension = 100 * clip(sum, 0, 1)
+    signals:
+      EMPLOYMENT_ENDED:             {initial: 1.00, half_life_days: 45}
+      FOUNDER_TITLE_ADDED:          {initial: 1.00, half_life_days: 60}
+      STEALTH_COMPANY_SIGNAL:       {initial: 0.85, half_life_days: 45}
+      POSSIBLE_COMPANY_FORMATION:   {initial_from: probability, factor: 0.90, half_life_days: 40}
+      COMPANY_FORMATION_CONFIRMED:  {initial: 1.00, half_life_days: 120}
+      PRODUCT_LAUNCH:               {initial: 0.80, half_life_days: 90}
+      FUNDRAISE_ANNOUNCED:          {initial: 0.95, half_life_days: 75}
+      COFOUNDER_SEARCH:             {initial: 0.80, half_life_days: 40}
+      HIRING_STARTED:               {initial: 0.70, half_life_days: 60}
+      DOMAIN_ACTIVITY_SPIKE:        {initial: 0.50, half_life_days: 30}
+
+  access:
+    kind: access_model
+    model: access_v0.1
+
+confidence:
+  weights:
+    reliability:   0.22
+    independence:  0.18
+    recency:       0.18
+    extraction:    0.15
+    identity:      0.12
+    completeness:  0.15

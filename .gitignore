@@ -1,0 +1,36 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local database + generated artifacts
+*.db
+*.sqlite3
+/chimera.db
+/artifacts/
+/data/runs/
+
+# Secrets
+.env
+.env.local
+
+# Claude Code machine-local overrides
+.claude/settings.local.json
+
+# Node / Next.js
+node_modules/
+apps/web/.next/
+apps/web/out/
+apps/web/.turbo/
+*.tsbuildinfo
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,15 @@
+{
+  "$comment": "Copy to settings.local.json (git-ignored) for machine-specific overrides — e.g. pre-approving the project's own commands so hooks and Make targets don't prompt.",
+  "permissions": {
+    "allow": [
+      "Bash(make *)",
+      "Bash(./.venv/bin/python -m pytest *)",
+      "Bash(./.venv/bin/python -m intelligence.*)",
+      "Bash(./.venv/bin/ruff *)",
+      "Bash(./.venv/bin/mypy *)",
+      "Bash(./.venv/bin/alembic *)",
+      "Bash(npm run *)",
+      "Bash(npx --no-install *)"
+    ]
+  }
+}

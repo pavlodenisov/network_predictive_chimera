@@ -1,0 +1,108 @@
+# Connector scoring model — V0.1.  Network position value (spec §17).
+# Avoid vanity metrics: follower counts are NOT a feature. See docs/SCORING.md §6.
+
+name: connector
+version: v0.1
+target: connector
+scale: 100
+
+priority:
+  connectivity:            0.72   # composite of relationship-count features
+  independent_paths:       0.10
+  cross_sector:            0.10
+  relationship_freshness:  0.04
+  intro_track_record:      0.04
+
+dimensions:
+
+  connectivity:
+    kind: weighted_features
+    renormalize_over_present: true
+    features:
+      relevant_connections:
+        weight: 0.40
+        normalization: capped_count
+        params: {max: 40}
+        missing_behavior: zero
+        direction: positive
+        source: "count of relationship_edge to people classed FOUNDER/LP/PORTFOLIO_EXECUTIVE"
+        rationale: "Relevant reach, not raw reach."
+      founder_connectivity:
+        weight: 0.22
+        normalization: capped_count
+        params: {max: 25}
+        missing_behavior: zero
+        direction: positive
+        source: "count of edges to FOUNDER / POTENTIAL_FOUNDER"
+      lp_connectivity:
+        weight: 0.22
+        normalization: capped_count
+        params: {max: 15}
+        missing_behavior: zero
+        direction: positive
+        source: "count of edges to LP / POTENTIAL_LP"
+      portfolio_connectivity:
+        weight: 0.16
+        normalization: capped_count
+        params: {max: 15}
+        missing_behavior: zero
+        direction: positive
+        source: "count of edges to PORTFOLIO_EXECUTIVE / portfolio-company employees"
+
+  independent_paths:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      independent_path_count:
+        weight: 1.0
+        normalization: capped_count
+        params: {max: 10}
+        missing_behavior: zero
+        direction: positive
+        source: "count of independent Chimera->X paths this person is the bridge for"
+
+  cross_sector:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      distinct_sectors:
+        weight: 1.0
+        normalization: capped_count
+        params: {max: 6}
+        missing_behavior: zero
+        direction: positive
+        source: "distinct sectors among this person's connections"
+
+  relationship_freshness:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      fresh_edge_share:
+        weight: 1.0
+        normalization: passthrough_unit
+        missing_behavior: unknown
+        direction: positive
+        source: "share of this person's edges verified within freshness.network_relationship (365d)"
+
+  intro_track_record:
+    kind: weighted_features
+    renormalize_over_present: false
+    features:
+      successful_intros:
+        weight: 1.0
+        normalization: capped_count
+        params: {max: 10}
+        missing_behavior: zero
+        direction: positive
+        source: "analyst_feedback: INTRO_REQUESTED -> INTRO_COMPLETED/MEETING_BOOKED with this person as connector"
+
+  # connector has no separate access dimension — the person's value IS their access-granting position.
+
+confidence:
+  weights:
+    reliability:   0.18
+    independence:  0.14
+    recency:       0.24        # network data staleness matters most here
+    extraction:    0.12
+    identity:      0.16
+    completeness:  0.16

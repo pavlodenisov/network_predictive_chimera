@@ -1,0 +1,161 @@
+[
+  {
+    "provider_record_id": "snap:sarah-chen:w2",
+    "mode": "update",
+    "content_type": "profile_snapshot",
+    "subject_hint": "Sarah Chen",
+    "observed_at": "2026-09-05",
+    "occurred_at": "2026-08-31",
+    "source_url": "https://profiles.example/sarah-chen",
+    "raw_json": {
+      "linkedin_url": "linkedin.com/in/sarah-chen-ml",
+      "observed_on": "2026-08-31",
+      "profile": {
+        "linkedin_url": "linkedin.com/in/sarah-chen-ml",
+        "headline": "Building",
+        "current_company": null,
+        "current_title": null,
+        "location": "San Francisco, CA"
+      }
+    },
+    "previous_snapshot": {
+      "linkedin_url": "linkedin.com/in/sarah-chen-ml",
+      "headline": "Staff ML Engineer at Synthetic AI Labs — inference infrastructure",
+      "current_company": "Synthetic AI Labs",
+      "current_title": "Staff ML Engineer",
+      "current_seniority": "senior_ic",
+      "location": "San Francisco, CA"
+    }
+  },
+  {
+    "provider_record_id": "news:sarah-chen-infra:w2",
+    "mode": "update",
+    "content_type": "news_article",
+    "subject_hint": "Sarah Chen",
+    "observed_at": "2026-09-04",
+    "occurred_at": "2026-09-04",
+    "source_url": "https://news.example/sarah-chen-new-project",
+    "raw_json": {
+      "title": "Former Synthetic AI Labs engineer Sarah Chen is building a new inference infrastructure project",
+      "summary": "Sarah Chen has left Synthetic AI Labs and is building a new company focused on low-latency model serving infrastructure. The project is currently in stealth.",
+      "subjects": ["Sarah Chen"]
+    }
+  },
+  {
+    "provider_record_id": "snap:marcus-webb:w2",
+    "mode": "update",
+    "content_type": "profile_snapshot",
+    "subject_hint": "Marcus Webb",
+    "observed_at": "2026-09-03",
+    "occurred_at": "2026-08-28",
+    "source_url": "https://profiles.example/marcus-webb",
+    "raw_json": {
+      "linkedin_url": "linkedin.com/in/marcus-webb-invest",
+      "observed_on": "2026-08-28",
+      "profile": {
+        "linkedin_url": "linkedin.com/in/marcus-webb-invest",
+        "headline": "Partner at Integral Family Office — venture fund allocation",
+        "current_company": "Integral Family Office",
+        "current_title": "Partner",
+        "current_seniority": "partner",
+        "location": "New York, NY"
+      }
+    },
+    "previous_snapshot": {
+      "linkedin_url": "linkedin.com/in/marcus-webb-invest",
+      "headline": "Principal at Integral Family Office",
+      "current_company": "Integral Family Office",
+      "current_title": "Principal",
+      "current_seniority": "senior_ic",
+      "location": "New York, NY"
+    }
+  },
+  {
+    "provider_record_id": "news:marcus-webb-mandate:w2",
+    "mode": "update",
+    "content_type": "news_article",
+    "subject_hint": "Marcus Webb",
+    "observed_at": "2026-09-02",
+    "occurred_at": "2026-08-28",
+    "source_url": "https://news.example/integral-family-office-venture",
+    "raw_json": {
+      "title": "Integral Family Office names Marcus Webb Partner with a new venture allocation mandate",
+      "summary": "Marcus Webb has been promoted to Partner at Integral Family Office. His official bio now adds responsibility for the office's venture fund allocation and emerging manager program.",
+      "subjects": ["Marcus Webb"]
+    }
+  },
+  {
+    "provider_record_id": "snap:priya-nair:w2",
+    "mode": "update",
+    "content_type": "profile_snapshot",
+    "subject_hint": "Priya Nair",
+    "observed_at": "2026-09-02",
+    "occurred_at": "2026-08-30",
+    "source_url": "https://profiles.example/priya-nair",
+    "raw_json": {
+      "linkedin_url": "linkedin.com/in/priya-nair-eng",
+      "observed_on": "2026-08-30",
+      "profile": {
+        "linkedin_url": "linkedin.com/in/priya-nair-eng",
+        "headline": "VP Engineering — payments, distributed systems. Considering what's next.",
+        "current_company": null,
+        "current_title": null,
+        "location": "Austin, TX"
+      }
+    },
+    "previous_snapshot": {
+      "linkedin_url": "linkedin.com/in/priya-nair-eng",
+      "headline": "VP Engineering at Meridian Payments",
+      "current_company": "Meridian Payments",
+      "current_title": "VP Engineering",
+      "current_seniority": "vp",
+      "location": "Austin, TX"
+    }
+  },
+  {
+    "provider_record_id": "news:alex-lee-mention:w2",
+    "mode": "discover",
+    "content_type": "news_article",
+    "subject_hint": "Alex Lee",
+    "observed_at": "2026-09-01",
+    "occurred_at": "2026-09-01",
+    "source_url": "https://news.example/alex-lee-panel",
+    "raw_json": {
+      "title": "Alex Lee joins panel on payments infrastructure at FinDev conference",
+      "summary": "Alex Lee spoke on a panel about payments infrastructure. No employer was named in the writeup.",
+      "subjects": ["Alex Lee"]
+    }
+  },
+  {
+    "provider_record_id": "snap:jordan-diaz:w2",
+    "mode": "discover",
+    "content_type": "profile_snapshot",
+    "subject_hint": "Jordan Diaz",
+    "observed_at": "2026-08-30",
+    "occurred_at": "2026-08-27",
+    "source_url": "https://profiles.example/jordan-diaz",
+    "raw_json": {
+      "linkedin_url": "linkedin.com/in/jordan-diaz-systems",
+      "observed_on": "2026-08-27",
+      "profile": {
+        "linkedin_url": "linkedin.com/in/jordan-diaz-systems",
+        "headline": "Founder — stealth. Previously distributed systems lead. Building GPU training infrastructure.",
+        "current_company": null,
+        "current_title": "Founder",
+        "founder_status": true,
+        "location": "Seattle, WA",
+        "years_domain_experience": 7.5,
+        "years_engineering_experience": 9.0,
+        "prior_founder": true
+      }
+    },
+    "previous_snapshot": {
+      "linkedin_url": "linkedin.com/in/jordan-diaz-systems",
+      "headline": "Distributed Systems Lead at Cirrus Compute",
+      "current_company": "Cirrus Compute",
+      "current_title": "Distributed Systems Lead",
+      "current_seniority": "manager",
+      "location": "Seattle, WA"
+    }
+  }
+]

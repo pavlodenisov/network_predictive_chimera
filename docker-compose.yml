@@ -1,0 +1,57 @@
+# Production-shaped local stack: web + api + PostgreSQL.
+#
+# NOTE FOR V0: the reference machine has no Docker daemon, so the default developer
+# workflow runs natively against SQLite (see README / docs/OPERATIONS.md). This file is
+# the blueprint for a Postgres-backed deployment and is exercised in CI, not on the
+# reference laptop. `docker compose up` brings the same code up against Postgres 16.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: chimera
+      POSTGRES_PASSWORD: chimera
+      POSTGRES_DB: chimera
+    ports:
+      - "5432:5432"
+    volumes:
+      - chimera_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chimera"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://chimera:chimera@db:5432/chimera
+      CHIMERA_CORS_ORIGINS: http://localhost:3000
+      CHIMERA_CODE_VERSION: ${CHIMERA_CODE_VERSION:-compose}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CHIMERA_EXTRACTOR: ${CHIMERA_EXTRACTOR:-rules}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python -m alembic upgrade head &&
+             python -m intelligence.jobs.seed &&
+             python -m uvicorn intelligence.api.app:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+  chimera_pgdata:

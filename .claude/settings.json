@@ -1,0 +1,15 @@
+{
+  "$comment": "Deterministic validation hooks (spec §46). py_compile blocks on syntax errors; ruff/eslint are advisory context. The hard gate is `make check` (CI / Wave 9).",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/hook_python_check.sh\"" },
+          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/hook_migration_reminder.sh\"" },
+          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/hook_web_check.sh\"" }
+        ]
+      }
+    ]
+  }
+}

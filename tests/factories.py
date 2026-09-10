@@ -140,7 +140,9 @@ def add_fact(
         subject_id=person.id,
         fact_type=fact_type,
         structured_value=structured,
-        valid_from=valid_from or now_utc(),
+        # default well before any test `as_of` so the fact is "currently known"
+        # (tests score against fixed past dates; wall-clock `now` would hide the fact)
+        valid_from=valid_from or datetime(2026, 1, 1, tzinfo=UTC),
         extraction_method="deterministic_parse",
         extractor_version="test",
         extraction_confidence=extraction_confidence,

@@ -5,8 +5,19 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def normalize_database_url(url: str) -> str:
+    """Accept the scheme-only URLs that hosted Postgres providers hand out
+    (``postgres://…`` / ``postgresql://…``) and pin our driver (``+psycopg``).
+    SQLite and already-qualified URLs pass through untouched."""
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://") :]
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://") :]
+    return url
 
 
 class Settings(BaseSettings):
@@ -28,6 +39,11 @@ class Settings(BaseSettings):
     )
     sql_echo: bool = Field(False, alias="CHIMERA_SQL_ECHO")
 
+    @field_validator("database_url")
+    @classmethod
+    def _normalize_db_url(cls, v: str) -> str:
+        return normalize_database_url(v)
+
     # --- api ---------------------------------------------------------------
     api_host: str = Field("127.0.0.1", alias="CHIMERA_API_HOST")
     api_port: int = Field(8000, alias="CHIMERA_API_PORT")
@@ -43,7 +59,10 @@ class Settings(BaseSettings):
     )
 
     # --- pipeline / run metadata -------------------------------------------
-    code_version: str = Field("dev", alias="CHIMERA_CODE_VERSION")
+    code_version: str = Field(
+        "dev",
+        validation_alias=AliasChoices("CHIMERA_CODE_VERSION", "RENDER_GIT_COMMIT", "SOURCE_COMMIT"),
+    )
     config_dir: Path = Field(Path("./configs"), alias="CHIMERA_CONFIG_DIR")
     seeds_dir: Path = Field(Path("./db/seeds"), alias="CHIMERA_SEEDS_DIR")
 

@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from intelligence.facts import is_unknown
@@ -126,22 +126,26 @@ def latest_facts(
 ) -> dict[str, Fact]:
     """Most recent non-superseded fact per ``fact_type`` for a person, true as of ``as_of``.
 
-    Visibility is keyed on when the fact *became true* (``valid_from``, falling back to
-    ``created_at``) — not when we happened to record it. Pass ``strict_created_at`` (used by
-    the backtest) to additionally exclude facts recorded after that instant, so no
-    later-extracted knowledge leaks into a historical point-in-time run (spec §35).
+    Visibility is keyed on **world time** (``valid_from`` — when the fact became true), not
+    on ``created_at`` (when we recorded it). A fact with a known ``valid_from`` after
+    ``as_of`` is not yet true; a fact with no ``valid_from`` is treated as current
+    knowledge. The backtest passes ``strict_created_at`` (or sets ``POINT_IN_TIME_CUTOFF``)
+    to *also* exclude anything recorded after that historical instant, so no later-extracted
+    knowledge leaks into a point-in-time run (spec §35).
     """
     as_of_utc = ensure_utc(as_of)
-    became_true = func.coalesce(Fact.valid_from, Fact.created_at)
     conditions = [
         Fact.subject_type == "person",
         Fact.subject_id == person_id,
         Fact.superseded_by_id.is_(None),
-        became_true <= as_of_utc,
     ]
     cutoff = strict_created_at or POINT_IN_TIME_CUTOFF.get()
     if cutoff is not None:
-        conditions.append(Fact.created_at <= ensure_utc(cutoff))
+        cutoff_utc = ensure_utc(cutoff)
+        conditions.append(func.coalesce(Fact.valid_from, Fact.created_at) <= as_of_utc)
+        conditions.append(Fact.created_at <= cutoff_utc)
+    else:
+        conditions.append(or_(Fact.valid_from.is_(None), Fact.valid_from <= as_of_utc))
     rows = (
         session.execute(
             select(Fact)
@@ -188,15 +192,29 @@ def fact_text(facts: dict[str, Fact], fact_type: str) -> tuple[str | None, list[
 
 
 def active_events(session: Session, person_id: uuid.UUID, as_of: datetime) -> list[Event]:
+    """Active events knowable at ``as_of``.
+
+    Visibility is keyed on **world time** (``occurred_at`` — when the change happened),
+    not ``detected_at`` (when we recorded it): a run labelled "as of last Monday" must not
+    count an event that occurred after that label, but it *must* still see events we
+    detected today for a current cycle. The backtest additionally caps ``detected_at`` at
+    its point-in-time cutoff so no later-learned knowledge leaks into a historical run.
+    """
+    as_of_utc = ensure_utc(as_of)
+    conds = [
+        Event.person_id == person_id,
+        Event.status == EventStatus.ACTIVE,
+        or_(
+            Event.occurred_at <= as_of_utc,
+            and_(Event.occurred_at.is_(None), Event.detected_at <= as_of_utc),
+        ),
+    ]
+    cutoff = POINT_IN_TIME_CUTOFF.get()
+    if cutoff is not None:
+        conds.append(Event.detected_at <= ensure_utc(cutoff))
     return list(
         session.execute(
-            select(Event)
-            .where(
-                Event.person_id == person_id,
-                Event.status == EventStatus.ACTIVE,
-                Event.detected_at <= ensure_utc(as_of),
-            )
-            .order_by(Event.occurred_at.desc().nullslast())
+            select(Event).where(*conds).order_by(Event.occurred_at.desc().nullslast())
         )
         .scalars()
         .all()
@@ -204,11 +222,15 @@ def active_events(session: Session, person_id: uuid.UUID, as_of: datetime) -> li
 
 
 def active_inferences(session: Session, person_id: uuid.UUID, as_of: datetime) -> list[Inference]:
+    """Non-expired inferences for a person. A live inference is current knowledge; only the
+    backtest's point-in-time cutoff excludes ones generated after the historical instant."""
     as_of_utc = ensure_utc(as_of)
+    conds = [Inference.person_id == person_id]
+    cutoff = POINT_IN_TIME_CUTOFF.get()
+    if cutoff is not None:
+        conds.append(Inference.created_at <= ensure_utc(cutoff))
     rows = session.execute(
-        select(Inference)
-        .where(Inference.person_id == person_id, Inference.created_at <= as_of_utc)
-        .order_by(Inference.created_at.desc())
+        select(Inference).where(*conds).order_by(Inference.created_at.desc())
     ).scalars()
     out: list[Inference] = []
     for inf in rows:

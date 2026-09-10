@@ -1,0 +1,49 @@
+# Render Blueprint — one deploy brings up the API, a Postgres database, and the web UI.
+# https://render.com/docs/blueprint-spec
+#
+# Usage: Render dashboard -> New -> Blueprint -> connect this repo -> Apply.
+# After the first deploy, set `NEXT_PUBLIC_API_BASE_URL` on chimera-web to the
+# chimera-api URL Render assigned (https://chimera-api-XXXX.onrender.com) and redeploy web.
+#
+# Free tier notes: web services sleep after ~15 min idle (cold start 30-60s); the free
+# Postgres instance is 1 GB and expires 90 days after creation. Fine for a demo.
+
+databases:
+  - name: chimera-db
+    plan: free
+    databaseName: chimera
+    user: chimera
+
+services:
+  - type: web
+    name: chimera-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./docker/api.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: chimera-db
+          property: connectionString
+      - key: CHIMERA_CORS_ORIGINS
+        value: "*"                 # demo-wide; tighten to the web URL for anything real
+      - key: CHIMERA_EXTRACTOR
+        value: rules               # deterministic; set to `claude` + ANTHROPIC_API_KEY to enable the LLM path
+      - key: CHIMERA_LOG_FORMAT
+        value: json
+      - key: ANTHROPIC_API_KEY
+        sync: false                # optional
+
+  - type: web
+    name: chimera-web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: ./apps/web
+    autoDeploy: true
+    envVars:
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false                # paste the chimera-api URL after the first deploy

@@ -1,9 +1,9 @@
 # Production-shaped local stack: web + api + PostgreSQL.
 #
-# NOTE FOR V0: the reference machine has no Docker daemon, so the default developer
-# workflow runs natively against SQLite (see README / docs/OPERATIONS.md). This file is
-# the blueprint for a Postgres-backed deployment and is exercised in CI, not on the
-# reference laptop. `docker compose up` brings the same code up against Postgres 16.
+# `docker compose up --build` brings the whole thing up against Postgres 16:
+#   web  -> http://localhost:3000     api -> http://localhost:8000/docs
+# The default native dev workflow (no Docker) still runs against SQLite — see README.
+# For a hosted one-click deploy use render.yaml (docs/DEPLOY_RENDER.md).
 
 services:
   db:
@@ -35,10 +35,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "python -m alembic upgrade head &&
-             python -m intelligence.jobs.seed &&
-             python -m uvicorn intelligence.api.app:app --host 0.0.0.0 --port 8000"
+    # scripts/bootstrap_demo.py: migrate -> seed -> one week-2 pipeline pass -> uvicorn
     ports:
       - "8000:8000"
 
@@ -46,6 +43,8 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
     depends_on:

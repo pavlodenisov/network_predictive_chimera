@@ -9,9 +9,14 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 function backendBase(): string {
-  const raw = (process.env.API_BASE_URL || "http://localhost:8000").trim();
-  const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-  return withScheme.replace(/\/+$/, "");
+  let raw = (process.env.API_BASE_URL || "http://localhost:8000").trim();
+  if (!/^https?:\/\//i.test(raw)) {
+    // scheme-less value: an internal `host:port` (private networking) → http,
+    // a public hostname (e.g. foo.onrender.com) → https.
+    const internal = /:\d+$/.test(raw) || !raw.includes(".") || raw.startsWith("localhost");
+    raw = `${internal ? "http" : "https"}://${raw}`;
+  }
+  return raw.replace(/\/+$/, "");
 }
 
 const HOP_BY_HOP = new Set(["host", "connection", "content-length", "accept-encoding"]);

@@ -48,10 +48,14 @@ services:
     dockerContext: ./apps/web
     autoDeploy: true
     envVars:
-      # RUNTIME var — the Next.js server proxies /api/be/* to this host (no CORS, no
-      # build-time baking). Auto-wired from chimera-api's hostname; the proxy adds https://.
+      # RUNTIME var — the Next.js server proxies /api/be/* to this URL (no CORS, no
+      # build-time baking). `fromService` on a Render *web* service returns only the
+      # private host (no domain, no port), which doesn't resolve for an external proxy —
+      # so this is the explicit public URL of chimera-api.
+      #
+      # A FRESH blueprint deploy gets a different random suffix: after the first deploy,
+      # set this to the actual chimera-api URL (chimera-web → Environment), or use private
+      # networking: swap to  fromService: {name: chimera-api, type: web, property: hostport}
+      # and the proxy will call it over http:// internally.
       - key: API_BASE_URL
-        fromService:
-          name: chimera-api
-          type: web
-          property: host
+        value: https://chimera-api-8q5r.onrender.com

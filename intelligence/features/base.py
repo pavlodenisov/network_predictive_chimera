@@ -213,9 +213,7 @@ def active_events(session: Session, person_id: uuid.UUID, as_of: datetime) -> li
     if cutoff is not None:
         conds.append(Event.detected_at <= ensure_utc(cutoff))
     return list(
-        session.execute(
-            select(Event).where(*conds).order_by(Event.occurred_at.desc().nullslast())
-        )
+        session.execute(select(Event).where(*conds).order_by(Event.occurred_at.desc().nullslast()))
         .scalars()
         .all()
     )

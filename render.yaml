@@ -1,12 +1,15 @@
 # Render Blueprint — one deploy brings up the API, a Postgres database, and the web UI.
 # https://render.com/docs/blueprint-spec
 #
-# Usage: Render dashboard -> New -> Blueprint -> connect this repo -> Apply.
-# After the first deploy, set `NEXT_PUBLIC_API_BASE_URL` on chimera-web to the
-# chimera-api URL Render assigned (https://chimera-api-XXXX.onrender.com) and redeploy web.
+#   Render dashboard -> New -> Blueprint -> connect this repo -> Apply.
 #
-# Free tier notes: web services sleep after ~15 min idle (cold start 30-60s); the free
-# Postgres instance is 1 GB and expires 90 days after creation. Fine for a demo.
+# Everything is wired automatically: chimera-web's API base URL is injected from
+# chimera-api (fromService), so there is NO manual env-var step. Just Apply and wait.
+#
+# Free-tier notes:
+#   * web services sleep after ~15 min idle (first request after that: ~30-60s cold start)
+#   * Render's free Postgres is deleted ~30 days after creation. For an indefinitely-free
+#     database, swap `chimera-db` for a free Neon instance — see docs/DEPLOY_RENDER.md.
 
 databases:
   - name: chimera-db
@@ -29,13 +32,13 @@ services:
           name: chimera-db
           property: connectionString
       - key: CHIMERA_CORS_ORIGINS
-        value: "*"                 # demo-wide; tighten to the web URL for anything real
+        value: "*" # first-version demo; tighten to the web URL once SSO is in front
       - key: CHIMERA_EXTRACTOR
-        value: rules               # deterministic; set to `claude` + ANTHROPIC_API_KEY to enable the LLM path
+        value: rules # deterministic; set `claude` + add ANTHROPIC_API_KEY to enable the LLM path
       - key: CHIMERA_LOG_FORMAT
         value: json
       - key: ANTHROPIC_API_KEY
-        sync: false                # optional
+        sync: false # optional
 
   - type: web
     name: chimera-web
@@ -45,5 +48,9 @@ services:
     dockerContext: ./apps/web
     autoDeploy: true
     envVars:
+      # auto-wired at build + runtime from chimera-api's hostname; lib/api.ts adds https://
       - key: NEXT_PUBLIC_API_BASE_URL
-        sync: false                # paste the chimera-api URL after the first deploy
+        fromService:
+          name: chimera-api
+          type: web
+          property: host

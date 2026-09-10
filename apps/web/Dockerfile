@@ -1,5 +1,6 @@
 # Chimera Network Intelligence — web image (Next.js standalone).
-# Build context is apps/web.
+# Build context is apps/web. No build-time API URL: the server proxies to the backend at
+# runtime via API_BASE_URL (see app/api/be/[...path]/route.ts).
 FROM node:20-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -9,9 +10,6 @@ FROM node:20-slim AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# NEXT_PUBLIC_* is inlined at build time — pass it as a build arg.
-ARG NEXT_PUBLIC_API_BASE_URL
-ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 

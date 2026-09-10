@@ -1,9 +1,12 @@
 # DEPLOY_VERCEL.md
 
+> For the simplest hosted setup use **`docs/DEPLOY_RENDER.md`** — one Blueprint, no
+> Vercel, no CORS. This file is the Vercel-specific path.
+
 Vercel hosts the **frontend only** (`apps/web`, Next.js). The `intelligence/` FastAPI
-backend + its database are a separate Python service — the UI is a pure client of that API
-(`NEXT_PUBLIC_API_BASE_URL`) and has no data of its own. So a working deployment is two
-pieces:
+backend + its database are a separate Python service. The Next.js server proxies
+`/api/be/*` to the backend using the runtime env var **`API_BASE_URL`** (no CORS, no
+build-time URL). So a working deployment is two pieces:
 
 ```
 Vercel  ──►  apps/web  (Next.js)  ──HTTP──►  FastAPI + Postgres  (Railway / Render / Fly / a VM)
@@ -17,10 +20,9 @@ You need a public HTTPS URL for the API and a Postgres database.
 1. New service → deploy from GitHub → `pavlodenisov/network_predictive_chimera`.
 2. Add a Postgres plugin/instance; it provides a connection string.
 3. Environment:
-   - `DATABASE_URL=postgresql+psycopg://…`  (note the `+psycopg` driver prefix)
-   - `CHIMERA_CORS_ORIGINS=https://<your-vercel-domain>.vercel.app`
-   - `CHIMERA_CODE_VERSION=$RAILWAY_GIT_COMMIT_SHA` (or similar)
+   - `DATABASE_URL=postgres://…`  (config.py rewrites it to `postgresql+psycopg://`)
    - optional: `ANTHROPIC_API_KEY` + `CHIMERA_EXTRACTOR=claude`
+   - CORS is not needed — the browser only talks to the Vercel proxy, not the API directly.
 4. Install + start:
    ```
    pip install -r requirements.txt && pip install -e '.[postgres]'
@@ -41,14 +43,16 @@ reverse proxy / platform at the `api` service on `:8000`.
 2. **Root Directory:** `apps/web`  ← important, the repo is a monorepo.
 3. Framework preset: **Next.js** (auto-detected; `apps/web/vercel.json` is committed).
 4. **Environment Variables:**
-   - `NEXT_PUBLIC_API_BASE_URL = https://<your-api-host>`   (the URL from step 1)
-5. Deploy. Every push to `main` redeploys.
+   - `API_BASE_URL = https://<your-api-host>`   (the URL from step 1; a runtime var,
+     read by the `/api/be/*` proxy route — not a `NEXT_PUBLIC_` build var)
+5. Deploy. Every push to `main` redeploys. Changing `API_BASE_URL` needs only a
+   redeploy, not a rebuild.
 
 **CLI (if you have `vercel` + are logged in):**
 ```bash
 cd apps/web
 vercel link                     # once
-vercel env add NEXT_PUBLIC_API_BASE_URL production   # paste the API URL
+vercel env add API_BASE_URL production   # paste the API URL
 vercel --prod
 ```
 

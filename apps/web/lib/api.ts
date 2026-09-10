@@ -1,12 +1,6 @@
-function resolveApiBase(): string {
-  const raw = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-  if (!raw) return "http://localhost:8000";
-  // Tolerate a scheme-less host (e.g. a Render `fromService` host value).
-  if (!/^https?:\/\//i.test(raw)) return `https://${raw}`;
-  return raw.replace(/\/$/, "");
-}
-
-export const API = resolveApiBase();
+// The browser talks only to this Next.js server, which proxies to the FastAPI backend
+// (see app/api/be/[...path]/route.ts). Same origin: no CORS, no build-time API URL.
+export const API = "/api/be";
 
 export async function api<T = any>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API}${path}`, {

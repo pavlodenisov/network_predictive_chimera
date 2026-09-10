@@ -2,17 +2,19 @@
 import { useEffect, useState } from "react";
 import { API } from "@/lib/api";
 
-/** Shows a fix-it banner when the FastAPI backend is unreachable — e.g. a Vercel deploy
- *  where NEXT_PUBLIC_API_BASE_URL isn't set, or the API host isn't running. */
+/** Shows a fix-it banner when the FastAPI backend can't be reached through the proxy —
+ *  e.g. API_BASE_URL is unset/wrong on the web service, or the API host is down. */
 export default function ApiBanner() {
   const [state, setState] = useState<"checking" | "ok" | "down">("checking");
 
   useEffect(() => {
-    const ctrl = new AbortController();
-    fetch(`${API}/health`, { signal: ctrl.signal, cache: "no-store" })
-      .then((r) => setState(r.ok ? "ok" : "down"))
-      .catch(() => setState("down"));
-    return () => ctrl.abort();
+    let cancelled = false;
+    fetch(`${API}/health`, { cache: "no-store" })
+      .then((r) => !cancelled && setState(r.ok ? "ok" : "down"))
+      .catch(() => !cancelled && setState("down"));
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (state !== "down") return null;
@@ -26,9 +28,9 @@ export default function ApiBanner() {
         fontSize: 12,
       }}
     >
-      Backend not reachable at <code className="mono">{API}</code>. Set{" "}
-      <code className="mono">NEXT_PUBLIC_API_BASE_URL</code> to a running FastAPI host and
-      redeploy — the UI is a client of that API and has no data of its own.
+      Backend not reachable. Set <code className="mono">API_BASE_URL</code> on this web
+      service to the FastAPI host and redeploy — the UI is a client of that API and has no
+      data of its own.
     </div>
   );
 }

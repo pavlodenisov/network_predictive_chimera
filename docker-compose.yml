@@ -43,10 +43,9 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      # runtime — the Next.js server proxies /api/be/* here (container network)
+      API_BASE_URL: http://api:8000
     depends_on:
       - api
     ports:

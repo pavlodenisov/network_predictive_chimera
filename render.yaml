@@ -48,8 +48,9 @@ services:
     dockerContext: ./apps/web
     autoDeploy: true
     envVars:
-      # auto-wired at build + runtime from chimera-api's hostname; lib/api.ts adds https://
-      - key: NEXT_PUBLIC_API_BASE_URL
+      # RUNTIME var — the Next.js server proxies /api/be/* to this host (no CORS, no
+      # build-time baking). Auto-wired from chimera-api's hostname; the proxy adds https://.
+      - key: API_BASE_URL
         fromService:
           name: chimera-api
           type: web

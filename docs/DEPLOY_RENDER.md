@@ -12,9 +12,10 @@ chimera-web (Next.js)  ──HTTP──►  chimera-api (FastAPI)  ──►  ch
 
 1. Render dashboard → **New → Blueprint** → connect `pavlodenisov/network_predictive_chimera` → **Apply**.
    Render creates `chimera-db`, `chimera-api`, `chimera-web`. Leave `ANTHROPIC_API_KEY` blank.
-2. **That's it — the API URL is auto-wired.** `chimera-web`'s `NEXT_PUBLIC_API_BASE_URL` is
-   injected from `chimera-api`'s hostname via `fromService`; `apps/web/lib/api.ts` prepends
-   `https://`. No manual env var, no second redeploy.
+2. **That's it — the API URL is auto-wired.** `chimera-web` runs a same-origin proxy
+   (`/api/be/*` → the backend); its **runtime** `API_BASE_URL` is injected from
+   `chimera-api`'s hostname via `fromService`. No CORS, no build-time env, no second
+   redeploy, no manual paste.
 3. First build of **chimera-api** runs `scripts/bootstrap_demo.py`:
    `alembic upgrade head` → `intelligence.jobs.seed` (≈113 synthetic people + week-1 baseline)
    → one `intelligence.jobs.weekly --as-of 2026-09-06` pass → `uvicorn`. All idempotent.

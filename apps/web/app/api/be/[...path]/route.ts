@@ -43,8 +43,12 @@ async function handle(req: NextRequest, path: string[]): Promise<Response> {
     );
   }
 
+  // `fetch` already decompressed the body, so the upstream length/encoding headers no
+  // longer describe what we forward — dropping them (the runtime sets a correct length)
+  // is what keeps large JSON responses from being truncated.
   const out = new Headers(upstream.headers);
   out.delete("content-encoding");
+  out.delete("content-length");
   out.delete("transfer-encoding");
   out.set("cache-control", "no-store");
   return new Response(upstream.body, { status: upstream.status, headers: out });

@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_HOSTED_ENV_MARKERS = ("RENDER", "RAILWAY_ENVIRONMENT", "FLY_APP_NAME", "K_SERVICE")
+#: sibling web services on these PaaS share a parent domain — used as a CORS fallback
+#: when an exact origin was not configured (a hosted instance still works out of the box).
+HOSTED_ORIGIN_REGEX = r"https://[A-Za-z0-9-]+\.(onrender\.com|up\.railway\.app|fly\.dev|run\.app)"
 
 
 def normalize_database_url(url: str) -> str:
@@ -76,6 +82,19 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def is_hosted(self) -> bool:
+        """Running on a known PaaS (Render / Railway / Fly / Cloud Run)."""
+        return any(m in os.environ for m in _HOSTED_ENV_MARKERS)
+
+    @property
+    def cors_allow_origin_regex(self) -> str | None:
+        """Fallback origin pattern for a hosted instance whose exact web-service URL
+        was not configured. Returns ``None`` unless hosted and no explicit ``*``."""
+        if "*" in self.cors_origin_list or not self.is_hosted:
+            return None
+        return HOSTED_ORIGIN_REGEX
 
     @property
     def is_sqlite(self) -> bool:

@@ -23,14 +23,22 @@ def create_app() -> FastAPI:
         version=__version__,
         summary="Structured, auditable intelligence on founders, LPs, talent, and connectors.",
     )
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origin_list,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
     log = get_logger("chimera.api")
+
+    cors_kwargs: dict = {"allow_methods": ["*"], "allow_headers": ["*"]}
+    if "*" in settings.cors_origin_list:
+        cors_kwargs["allow_origins"] = ["*"]
+    else:
+        cors_kwargs["allow_origins"] = settings.cors_origin_list
+        if settings.cors_allow_origin_regex:
+            cors_kwargs["allow_origin_regex"] = settings.cors_allow_origin_regex
+            log.warning(
+                "cors.hosted_fallback",
+                configured=settings.cors_origin_list,
+                regex=settings.cors_allow_origin_regex,
+                hint="set CHIMERA_CORS_ORIGINS to the exact web URL once SSO is in front",
+            )
+    app.add_middleware(CORSMiddleware, **cors_kwargs)
 
     @app.exception_handler(Exception)
     async def _unhandled(request: Request, exc: Exception) -> JSONResponse:  # noqa: RUF029

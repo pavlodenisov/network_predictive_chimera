@@ -28,6 +28,10 @@ node_modules/
 apps/web/.next/
 apps/web/out/
 apps/web/.turbo/
+apps/team/.next/
+apps/team/out/
+apps/team/.turbo/
+apps/team/next-env.d.ts
 *.tsbuildinfo
 
 # Editor / OS

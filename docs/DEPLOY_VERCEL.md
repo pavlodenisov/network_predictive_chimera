@@ -1,16 +1,26 @@
 # DEPLOY_VERCEL.md
 
 > For the simplest hosted setup use **`docs/DEPLOY_RENDER.md`** — one Blueprint, no
-> Vercel, no CORS. This file is the Vercel-specific path.
+> Vercel. This file is the Vercel-specific path.
 
-Vercel hosts the **frontend only** (`apps/web`, Next.js). The `intelligence/` FastAPI
-backend + its database are a separate Python service. The Next.js server proxies
-`/api/be/*` to the backend using the runtime env var **`API_BASE_URL`** (no CORS, no
-build-time URL). So a working deployment is two pieces:
+There are **two frontends** in this repo, both deployable to Vercel the same way:
+
+| App | Audience | Screens |
+|---|---|---|
+| `apps/web` | Analysts | The dense terminal — full evidence trees, model config, data quality, weekly runs |
+| `apps/team` | Everyone else | Plain-language "who to talk to and why" — same data, simpler surface, one click through to the full evidence |
+
+Vercel hosts the **frontend only**. The `intelligence/` FastAPI backend + its database are
+a separate Python service. Each Next.js app proxies `/api/be/*` to that backend using the
+runtime env var **`API_BASE_URL`** (no CORS, no build-time URL — see
+`app/api/be/[...path]/route.ts` in either app). So a working deployment is two pieces:
 
 ```
-Vercel  ──►  apps/web  (Next.js)  ──HTTP──►  FastAPI + Postgres  (Railway / Render / Fly / a VM)
+Vercel  ──►  apps/web  or  apps/team  (Next.js)  ──HTTP──►  FastAPI + Postgres  (Render / Railway / Fly)
 ```
+
+Deploy both from the same repo as two separate Vercel projects with different **Root
+Directory** settings, pointed at the same API.
 
 ## 1. Deploy the API first (pick one)
 
@@ -36,21 +46,23 @@ You need a public HTTPS URL for the API and a Postgres database.
 **Docker:** `docker compose up` builds `docker/api.Dockerfile` + Postgres + web; point a
 reverse proxy / platform at the `api` service on `:8000`.
 
-## 2. Deploy the frontend to Vercel
+## 2. Deploy a frontend to Vercel
 
-**Dashboard (no CLI needed):**
+**Dashboard (no CLI needed) — repeat once per app:**
 1. Vercel → **Add New → Project → Import** `pavlodenisov/network_predictive_chimera`.
-2. **Root Directory:** `apps/web`  ← important, the repo is a monorepo.
-3. Framework preset: **Next.js** (auto-detected; `apps/web/vercel.json` is committed).
+2. **Root Directory:** `apps/team` for the friendly team view, or `apps/web` for the
+   analyst terminal ← important, the repo is a monorepo.
+3. Framework preset: **Next.js** (auto-detected; `vercel.json` is committed in both apps).
 4. **Environment Variables:**
    - `API_BASE_URL = https://<your-api-host>`   (the URL from step 1; a runtime var,
      read by the `/api/be/*` proxy route — not a `NEXT_PUBLIC_` build var)
 5. Deploy. Every push to `main` redeploys. Changing `API_BASE_URL` needs only a
-   redeploy, not a rebuild.
+   redeploy, not a rebuild. Give the second app its own Vercel project (don't reuse the
+   first project for both Root Directories).
 
 **CLI (if you have `vercel` + are logged in):**
 ```bash
-cd apps/web
+cd apps/team   # or apps/web
 vercel link                     # once
 vercel env add API_BASE_URL production   # paste the API URL
 vercel --prod
@@ -58,10 +70,10 @@ vercel --prod
 
 ## 3. Verify
 
-- Open the Vercel URL. If the red banner "Backend not reachable" shows, the env var is
-  missing/wrong or the API host is down.
-- Add the exact Vercel domain to the API's `CHIMERA_CORS_ORIGINS` and redeploy the API,
-  or browser requests are blocked by CORS.
+Open the Vercel URL. If the banner "Can't reach the data source" / "Backend not
+reachable" shows, `API_BASE_URL` is missing/wrong or the API host is asleep/down — no
+CORS setup is needed since the browser only ever talks to the Vercel proxy, never the
+API directly.
 
 ## Single-platform alternative (advanced)
 

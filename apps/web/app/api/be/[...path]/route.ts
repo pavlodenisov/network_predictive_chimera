@@ -21,6 +21,43 @@ function backendBase(): string {
 
 const HOP_BY_HOP = new Set(["host", "connection", "content-length", "accept-encoding"]);
 
+// A free-tier backend asleep can take 30-60s to wake, which sometimes outruns the
+// platform's own gateway timeout (it serves a 502 before the app finishes booting). Retry
+// transparently — only for safe/idempotent methods — so the caller never sees that first
+// cold 502; they just get a slightly slower first response.
+const RETRY_DELAYS_MS = [3000, 6000, 12000];
+const RETRYABLE_STATUS = new Set([502, 503, 504]);
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithWakeupRetry(
+  target: string,
+  init: RequestInit,
+  retry: boolean,
+): Promise<Response> {
+  // Next.js patches the global `fetch` with its own caching/dedup layer; `cache: "no-store"`
+  // opts a call out of that entirely (documented escape hatch) — without it, retrying the
+  // same URL in a loop can hang waiting on that layer instead of hitting the network again.
+  const reqInit: RequestInit = { ...init, cache: "no-store" };
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const res = await fetch(target, reqInit);
+      const isLastAttempt = attempt === RETRY_DELAYS_MS.length;
+      if (!retry || !RETRYABLE_STATUS.has(res.status) || isLastAttempt) return res;
+      // Drain rather than cancel: some fetch implementations hang on an aborted body.
+      await res.arrayBuffer().catch(() => undefined);
+    } catch (err) {
+      lastError = err;
+      if (!retry || attempt === RETRY_DELAYS_MS.length) throw err;
+    }
+    await sleep(RETRY_DELAYS_MS[attempt]);
+  }
+  throw lastError; // unreachable, satisfies the type checker
+}
+
 async function handle(req: NextRequest, path: string[]): Promise<Response> {
   const target = `${backendBase()}/${path.map(encodeURIComponent).join("/")}${req.nextUrl.search}`;
 
@@ -30,12 +67,16 @@ async function handle(req: NextRequest, path: string[]): Promise<Response> {
   });
 
   const method = req.method.toUpperCase();
-  const body =
-    method === "GET" || method === "HEAD" ? undefined : Buffer.from(await req.arrayBuffer());
+  const idempotent = method === "GET" || method === "HEAD";
+  const body = idempotent ? undefined : Buffer.from(await req.arrayBuffer());
 
   let upstream: Response;
   try {
-    upstream = await fetch(target, { method, headers, body, redirect: "manual" });
+    upstream = await fetchWithWakeupRetry(
+      target,
+      { method, headers, body, redirect: "manual" },
+      idempotent,
+    );
   } catch (err) {
     return Response.json(
       { detail: `backend unreachable at ${backendBase()}`, error: String(err) },

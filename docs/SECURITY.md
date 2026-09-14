@@ -38,6 +38,11 @@ authenticated principal; role checks (`analyst`, `partner`) are enforced in `dep
   authorized snapshots / licensed APIs and are disabled until configured (`docs/SOURCES.md`).
 - `RSSNewsSource` is offline by default; live fetch (`CHIMERA_RSS_LIVE=1`) honours each
   feed's terms and a polite delay.
+- `WebSearchSource` calls the Tavily search API (a licensed third party), never
+  linkedin.com directly — disabled without `TAVILY_API_KEY`. Its `discover()` mode reads
+  LinkedIn profile names only from the search index's own returned title metadata, the
+  same information a Google/Bing result card already shows; it never fetches, renders, or
+  authenticates against linkedin.com (`docs/SOURCES.md`).
 - Each adapter's module docstring states its permitted-acquisition assumption.
 
 ## 5. Prohibited inferences  (§39)

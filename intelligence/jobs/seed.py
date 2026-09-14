@@ -322,6 +322,7 @@ def _ensure_live_sources(session: Session) -> None:
         ("json_snapshot", SourceType.JSON_SNAPSHOT, 3, True),
         ("manual_csv", SourceType.MANUAL_CSV, 3, True),
         ("rss_news", SourceType.RSS, 4, True),
+        ("web_search", SourceType.WEB_SEARCH, 4, True),
         ("linkedin_snapshot", SourceType.PROFESSIONAL_PROFILE, 3, False),
         ("crm", SourceType.CRM, 2, False),
         ("crunchbase", SourceType.CRUNCHBASE, 2, False),

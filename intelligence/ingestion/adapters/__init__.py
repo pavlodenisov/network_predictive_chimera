@@ -26,6 +26,7 @@ from intelligence.ingestion.adapters.stubs import (
     PitchBookSource,
 )
 from intelligence.ingestion.adapters.synthetic import SyntheticSource
+from intelligence.ingestion.adapters.web_search import WebSearchSource
 from intelligence.models import Source
 
 #: adapter classes keyed by ``source.provider`` / ``source.name``.
@@ -34,6 +35,7 @@ ADAPTER_CLASSES: dict[str, type] = {
     "json_snapshot": JSONSnapshotSource,
     "manual_csv": ManualCSVSource,
     "rss_news": RSSNewsSource,
+    "web_search": WebSearchSource,
     "linkedin_snapshot": LinkedInSnapshotSource,
     "crm": CRMSource,
     "crunchbase": CrunchbaseSource,
@@ -41,7 +43,8 @@ ADAPTER_CLASSES: dict[str, type] = {
     "github": GitHubSource,
 }
 
-WORKING_ADAPTERS = ("synthetic", "json_snapshot", "manual_csv", "rss_news")
+#: real (non-stub) adapters. `web_search` still no-ops cleanly without TAVILY_API_KEY.
+WORKING_ADAPTERS = ("synthetic", "json_snapshot", "manual_csv", "rss_news", "web_search")
 
 
 def build_adapter(provider: str, configuration: dict | None = None) -> Any:
@@ -49,8 +52,14 @@ def build_adapter(provider: str, configuration: dict | None = None) -> Any:
     cls = ADAPTER_CLASSES.get(provider)
     if cls is None:
         return None
+    cfg = configuration or {}
     if provider == "rss_news":
-        return RSSNewsSource(feed_urls=(configuration or {}).get("feed_urls"))
+        return RSSNewsSource(feed_urls=cfg.get("feed_urls"))
+    if provider == "web_search":
+        return WebSearchSource(
+            max_results=cfg.get("max_results", 5),
+            max_queries_per_run=cfg.get("max_queries_per_run", 25),
+        )
     return cls()
 
 
@@ -82,6 +91,7 @@ __all__ = [
     "SourceAdapter",
     "SourceHealth",
     "SyntheticSource",
+    "WebSearchSource",
     "build_adapter",
     "get_enabled_adapters",
 ]

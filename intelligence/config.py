@@ -79,6 +79,11 @@ class Settings(BaseSettings):
     # --- news --------------------------------------------------------------
     rss_live: bool = Field(False, alias="CHIMERA_RSS_LIVE")
 
+    # --- web search (optional) ----------------------------------------------
+    # Tavily (https://tavily.com) — real third-party search API. WebSearchSource
+    # no-ops cleanly (status=disabled) when this is unset; nothing is scraped.
+    tavily_api_key: str | None = Field(None, alias="TAVILY_API_KEY")
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

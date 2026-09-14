@@ -39,6 +39,8 @@ services:
         value: json
       - key: ANTHROPIC_API_KEY
         sync: false # optional
+      - key: TAVILY_API_KEY
+        sync: false # optional — enables WebSearchSource; unset = cleanly disabled
 
   - type: web
     name: chimera-web

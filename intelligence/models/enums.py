@@ -129,6 +129,7 @@ class SourceType(StrEnum):
     CRUNCHBASE = "crunchbase"
     PITCHBOOK = "pitchbook"
     SYNTHETIC = "synthetic"
+    WEB_SEARCH = "web_search"
 
 
 class ContentType(StrEnum):

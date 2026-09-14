@@ -1,8 +1,9 @@
 """Idempotent demo bootstrap for a hosted deployment (Render / Docker / Fly).
 
-migrate  ->  seed (no-op if the universe already exists)  ->  ensure a week-2 pipeline
-pass so the UI shows week-over-week deltas (only if fewer than 2 WeeklyRun rows)  ->
-exec uvicorn. Safe to run on every container start.
+migrate  ->  seed (no-op if the universe already exists)  ->  seed industry events
+(no-op if already present)  ->  ensure a week-2 pipeline pass so the UI shows
+week-over-week deltas (only if fewer than 2 WeeklyRun rows)  ->  exec uvicorn.
+Safe to run on every container start.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ def _run(*args: str, check: bool = True) -> int:
 def main() -> None:
     _run("alembic", "upgrade", "head")
     _run("intelligence.jobs.seed")
+    _run("scripts.seed_industry_events")
 
     from sqlalchemy import func, select
 

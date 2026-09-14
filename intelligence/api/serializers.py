@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from intelligence.models import (
+    Education,
     Employment,
     Event,
     Evidence,
@@ -65,6 +66,80 @@ def current_and_previous_role(
         }
 
     return _fmt(cur), _fmt(prev)
+
+
+def employment_history(session: Session, person_id: uuid.UUID) -> list[dict]:
+    """Full employment history (spec §7 Employment) — not just current/previous."""
+    emps = session.execute(
+        select(Employment)
+        .where(Employment.person_id == person_id)
+        .order_by(Employment.current.desc(), Employment.started_at.desc().nullslast())
+    ).scalars()
+    return [
+        {
+            "id": str(e.id),
+            "company": _org_name(session, e.organization_id),
+            "title": e.title,
+            "function": e.function,
+            "seniority": e.seniority,
+            "started_at": e.started_at.isoformat() if e.started_at else None,
+            "ended_at": e.ended_at.isoformat() if e.ended_at else None,
+            "current": e.current,
+            "confidence": e.confidence,
+            "evidence_ids": e.evidence_ids or [],
+        }
+        for e in emps
+    ]
+
+
+def education_history(session: Session, person_id: uuid.UUID) -> list[dict]:
+    """Full education history (spec §7 Education)."""
+    rows = session.execute(
+        select(Education)
+        .where(Education.person_id == person_id)
+        .order_by(Education.end_date.desc().nullslast())
+    ).scalars()
+    return [
+        {
+            "id": str(e.id),
+            "institution": _org_name(session, e.institution_id) or e.institution_name_raw,
+            "degree": e.degree,
+            "field": e.field,
+            "start_date": e.start_date.isoformat() if e.start_date else None,
+            "end_date": e.end_date.isoformat() if e.end_date else None,
+        }
+        for e in rows
+    ]
+
+
+def activity_for(session: Session, person: Person, limit: int = 20) -> list[dict]:
+    """Raw activity/news observations naming this person — quoted context that didn't
+    necessarily produce a scored fact/event, but is still real, sourced material worth
+    showing (spec §2.1 evidence over prose: show the actual quote, not a summary of it)."""
+    rows = session.execute(
+        select(RawObservation)
+        .where(
+            RawObservation.subject_hint == person.canonical_name,
+            RawObservation.content_type.in_(["activity_post", "news_article"]),
+        )
+        .order_by(RawObservation.observed_at.desc())
+        .limit(limit)
+    ).scalars()
+    out = []
+    for o in rows:
+        rj = o.raw_json or {}
+        out.append(
+            {
+                "id": str(o.id),
+                "content_type": o.content_type,
+                "title": rj.get("title"),
+                "text": o.raw_text,
+                "source_url": o.source_url,
+                "observed_at": o.observed_at.isoformat() if o.observed_at else None,
+                "occurred_at": o.occurred_at.isoformat() if o.occurred_at else None,
+            }
+        )
+    return out
 
 
 def latest_scores(session: Session, person_id: uuid.UUID) -> dict[str, dict]:

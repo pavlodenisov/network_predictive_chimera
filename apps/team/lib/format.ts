@@ -138,6 +138,35 @@ export function factValueText(value: unknown): string {
   return String(value);
 }
 
+/** Formats in UTC, not the viewer's local zone: these dates represent a calendar day
+ * at the event's own venue, and shifting them by browser timezone would print the
+ * wrong day (e.g. a UTC-midnight Nov 17 start rendering as "Nov 16" west of the UTC line). */
+export function formatDate(iso?: string | null): string {
+  if (!iso) return "date unknown";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "date unknown";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+}
+
+/** Countdown for a future ISO date — the events calendar's analogue of `ago()`. */
+export function until(iso?: string | null): string {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const days = Math.ceil((then - Date.now()) / 86_400_000);
+  if (days < 0) return "past";
+  if (days === 0) return "today";
+  if (days === 1) return "tomorrow";
+  if (days < 14) return `in ${days} days`;
+  if (days < 60) return `in ${Math.floor(days / 7)} weeks`;
+  return `in ${Math.floor(days / 30)} months`;
+}
+
+export function truncate(s: string | null | undefined, max = 400): string {
+  if (!s) return "";
+  return s.length > max ? `${s.slice(0, max).trimEnd()}…` : s;
+}
+
 export function humanize(key: string): string {
   return key
     .replace(/_/g, " ")

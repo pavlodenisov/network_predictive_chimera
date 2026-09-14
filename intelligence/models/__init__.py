@@ -15,6 +15,7 @@ from intelligence.models.analyst import (
 from intelligence.models.config_tables import ActionRuleSet, ThesisConfiguration
 from intelligence.models.discovery import DiscoveryCandidate, DiscoveryRule
 from intelligence.models.event import Event
+from intelligence.models.industry_event import IndustryEvent
 from intelligence.models.network import RelationshipEdge
 from intelligence.models.org import Education, Employment, Organization
 from intelligence.models.person import Person, PersonAlias, PersonClassification
@@ -52,6 +53,7 @@ __all__ = [
     "ExtractionRun",
     "Fact",
     "Inference",
+    "IndustryEvent",
     "Organization",
     "Person",
     "PersonAlias",

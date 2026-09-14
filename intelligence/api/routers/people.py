@@ -7,6 +7,9 @@ from sqlalchemy import or_, select
 
 from intelligence.api.deps import PaginationDep, SessionDep
 from intelligence.api.serializers import (
+    activity_for,
+    education_history,
+    employment_history,
     evidence_detail,
     fact_detail,
     person_detail,
@@ -192,3 +195,23 @@ def person_paths(person_id: str, session: SessionDep) -> dict:
     person = _get_person(session, person_id)
     acc = compute_access(session, person.id, now_utc())
     return acc.as_dict()
+
+
+@router.get("/{person_id}/employment")
+def person_employment(person_id: str, session: SessionDep) -> dict:
+    person = _get_person(session, person_id)
+    return {"items": employment_history(session, person.id)}
+
+
+@router.get("/{person_id}/education")
+def person_education(person_id: str, session: SessionDep) -> dict:
+    person = _get_person(session, person_id)
+    return {"items": education_history(session, person.id)}
+
+
+@router.get("/{person_id}/activity")
+def person_activity(person_id: str, session: SessionDep) -> dict:
+    """Raw, quoted activity/news observations for this person — real material, not a
+    generated summary of it (spec §2.1)."""
+    person = _get_person(session, person_id)
+    return {"items": activity_for(session, person)}

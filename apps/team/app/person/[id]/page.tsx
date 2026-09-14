@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { ago, classLabel, eventPhrase, factValueText, humanize, num } from "@/lib/format";
+import { ago, classLabel, eventPhrase, factValueText, formatDate, humanize, num, truncate } from "@/lib/format";
 import ActionBadge from "@/components/ActionBadge";
 import WhyBreakdown from "@/components/WhyBreakdown";
 
@@ -13,6 +13,18 @@ export default function PersonPage({ params }: { params: { id: string } }) {
   const scores = useQuery({ queryKey: ["person", id, "scores"], queryFn: () => api<any>(`/people/${id}/scores`) });
   const facts = useQuery({ queryKey: ["person", id, "facts"], queryFn: () => api<any>(`/people/${id}/facts`) });
   const events = useQuery({ queryKey: ["person", id, "events"], queryFn: () => api<any>(`/people/${id}/events`) });
+  const employment = useQuery({
+    queryKey: ["person", id, "employment"],
+    queryFn: () => api<any>(`/people/${id}/employment`),
+  });
+  const education = useQuery({
+    queryKey: ["person", id, "education"],
+    queryFn: () => api<any>(`/people/${id}/education`),
+  });
+  const activity = useQuery({
+    queryKey: ["person", id, "activity"],
+    queryFn: () => api<any>(`/people/${id}/activity`),
+  });
 
   const [model, setModel] = useState<string | null>(null);
 
@@ -127,6 +139,44 @@ export default function PersonPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
+      <div className="two-col">
+        <div className="card" style={{ padding: 18 }}>
+          <h3 style={{ fontSize: 14, marginBottom: 10 }}>Employment history</h3>
+          {(employment.data?.items || []).length ? (
+            employment.data.items.map((e: any) => (
+              <div className="kv-row" key={e.id}>
+                <span className="k">
+                  {e.title || "Unknown title"} at {e.company || "Unknown company"}
+                </span>
+                <span className="v">
+                  {e.current
+                    ? `Since ${formatDate(e.started_at)} · Current`
+                    : e.started_at || e.ended_at
+                      ? `${formatDate(e.started_at)} – ${formatDate(e.ended_at)}`
+                      : "dates unknown"}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="unknown">No employment history on record yet.</div>
+          )}
+        </div>
+
+        <div className="card" style={{ padding: 18 }}>
+          <h3 style={{ fontSize: 14, marginBottom: 10 }}>Education</h3>
+          {(education.data?.items || []).length ? (
+            education.data.items.map((e: any) => (
+              <div className="kv-row" key={e.id}>
+                <span className="k">{e.institution || "Unknown institution"}</span>
+                <span className="v">{[e.degree, e.field].filter(Boolean).join(", ") || "—"}</span>
+              </div>
+            ))
+          ) : (
+            <div className="unknown">No education on record yet.</div>
+          )}
+        </div>
+      </div>
+
       <div className="section">
         <h2>Recent activity</h2>
         {(events.data?.items || []).length ? (
@@ -145,6 +195,33 @@ export default function PersonPage({ params }: { params: { id: string } }) {
         ) : (
           <div className="card empty">No recent activity detected.</div>
         )}
+      </div>
+
+      <div className="section">
+        <h2>In their own words</h2>
+        <div className="card" style={{ padding: "6px 18px" }}>
+          {(activity.data?.items || []).length ? (
+            activity.data.items.map((a: any) => (
+              <div className="evidence-row" key={a.id}>
+                {a.title ? <div className="ft">{a.title}</div> : null}
+                <blockquote>{truncate(a.text, 500)}</blockquote>
+                <div className="src">
+                  {ago(a.observed_at)}
+                  {a.source_url ? (
+                    <>
+                      {" · "}
+                      <a href={a.source_url} target="_blank" rel="noreferrer">
+                        view source
+                      </a>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="empty">No activity or news mentions on record yet.</div>
+          )}
+        </div>
       </div>
 
       {(p.inferences || []).length > 0 ? (

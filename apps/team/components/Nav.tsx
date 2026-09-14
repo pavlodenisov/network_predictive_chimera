@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/people?class=TALENT", label: "Talent", cls: "TALENT" },
   { href: "/people?class=CONNECTOR", label: "Connectors", cls: "CONNECTOR" },
   { href: "/people", label: "Search everyone", cls: "" },
+  { href: "/events", label: "Events", cls: null },
 ];
 
 export default function Nav() {
@@ -23,7 +24,11 @@ export default function Nav() {
       {LINKS.map((l) => {
         const onPeople = pathname === "/people";
         const active =
-          l.href === "/" ? pathname === "/" : onPeople && (l.cls || "") === activeClass;
+          l.href === "/"
+            ? pathname === "/"
+            : l.href.startsWith("/people")
+              ? onPeople && (l.cls || "") === activeClass
+              : pathname.startsWith(l.href);
         return (
           <Link key={l.href} href={l.href} className={active ? "active" : ""}>
             {l.label}
